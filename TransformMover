@@ -1,0 +1,66 @@
+using UnityEngine;
+
+public class TransformMover : MonoBehaviour
+{
+    [SerializeField] private float _maxSpeed;
+    [SerializeField] private float _acceleration;
+    [SerializeField] private float _xRotation;
+    [SerializeField] private bool _isMovingForward;
+    [SerializeField] private Transform _benchmark;
+
+    private Transform _transform;
+    //private CharacterController _characterController;
+    private float _currentSpeed = 0;
+    private float _currentXRotation;
+    //private Rigidbody _rigidbody;
+
+    private void Awake()
+    {
+        _transform = transform;
+        //_rigidbody = GetComponent<Rigidbody>();
+        //_characterController = GetComponent<CharacterController>();
+    }
+
+    private void Update()
+    {
+        if (_isMovingForward)
+        {
+            PushForward();
+
+            //if (_currentXRotation < _xRotation)
+            //    AdjustForwardRotation();
+        }
+    }
+
+    //private void AdjustForwardRotation()
+    //{
+    //    _currentXRotation = Mathf.Lerp(_currentXRotation, _xRotation, 0.3f);
+    //    _transform.localRotation = Quaternion.Euler(_currentXRotation,
+    //        _transform.rotation.eulerAngles.y, _transform.rotation.eulerAngles.z);
+    //}
+
+    private void PushForward()
+    {
+        if (_currentSpeed < _maxSpeed)
+            _currentSpeed = Mathf.MoveTowards(_currentSpeed, _maxSpeed, _acceleration);
+
+        
+        _transform.Translate(_transform.forward *  _maxSpeed * Time.deltaTime, Space.Self);
+
+        //Vector3 direction = _transform.TransformDirection(_transform.forward);
+        //transform.Translate(direction * _currentSpeed * Time.deltaTime);
+        //float input = Input.GetAxis("Vertical");
+       
+
+        //if (input != 0) 
+        //{
+        //    //_characterController.Move(_transform.forward * _maxSpeed * Time.deltaTime);
+        //}
+    }
+
+    //private void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.yellow;
+    //    Gizmos.DrawLine(transform.forward, transform.forward * 10f);
+    //}
+}
