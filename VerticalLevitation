@@ -1,0 +1,59 @@
+using UnityEngine;
+
+public class LevitationTest2 : MonoBehaviour
+{
+
+
+    [SerializeField] private Rigidbody _rigidbody;
+    [SerializeField] private float _maxDistance = 2f;
+    [SerializeField] private LayerMask _layerMask;
+    [SerializeField] private float _maxForce;
+    [SerializeField] private float _damping;
+    [SerializeField] private float _progressivity = 1f;
+
+    private Transform _transform;
+    private Vector3 _positionOffset;
+    private Vector3 _oldPosition;
+
+    private void Awake()
+    {
+        _transform = transform;
+    }
+
+    private void FixedUpdate()
+    {
+        Vector3 forceDirection = Vector3.up;
+
+
+        if (Physics.Raycast(_transform.position, -_transform.up, out RaycastHit hitInfo, _maxDistance, _layerMask, QueryTriggerInteraction.Ignore))
+        {
+            Lift(-_transform.up, hitInfo.distance, out forceDirection);
+            //Debug.Log(hitInfo.collider.gameObject.name);
+        }
+
+        Damping(forceDirection);
+    }
+
+    private void Lift(Vector3 vector3, float distance, out Vector3 forceDirection)
+    {
+        var forceFactor = Mathf.Pow(Mathf.Clamp01(1f - distance / _maxDistance), _progressivity);
+        forceDirection = -vector3;
+        _rigidbody.AddForce(forceDirection * _maxForce * forceFactor, ForceMode.Force);
+    }
+
+    private void Damping(Vector3 forceDirection)
+    {
+        _positionOffset = _transform.position - _oldPosition;
+        Vector3 positionOffsetNormalized = _positionOffset.normalized;
+        Vector3 forceDirectionNormalized = forceDirection.normalized;
+        float dotResult = Vector3.Dot(forceDirectionNormalized, positionOffsetNormalized);
+        float clampedDotResult = Mathf.Clamp01(dotResult);
+        Vector3 dampingEndValue = -forceDirection * _positionOffset.magnitude * clampedDotResult *  _damping;
+        _rigidbody.AddForce(dampingEndValue, ForceMode.Force);
+        _oldPosition = _transform.position;
+    }
+
+    //Метод Damping подавляет только восходящее движение объекта.
+    //Если объект движется вниз, dotResult будет возвращать 0, поэтому 
+    //dampingEndValue при умножении на dotResult также будет равняться 0
+}
