@@ -1,0 +1,75 @@
+using UnityEngine;
+
+[System.Serializable]
+public class PIDController
+{
+    [SerializeField] private float _ki;
+    [SerializeField] private float _kp;
+    [SerializeField] private float _kd;
+    [SerializeField] private float _maxOut;
+    [SerializeField] private float _minOut;
+    [SerializeField] private float _accuracyDivisor = 1f;
+
+    private float _integral;
+    private float _error;
+    private float _previousError;
+    private float _currentDelta;
+    private float _targetPoint;
+
+    private float ComputePID(float _currentPosition, float passedTime) 
+    {
+        _error = _targetPoint - _currentPosition;
+        _integral = Mathf.Clamp(_integral + _error * passedTime * _ki, _minOut, _maxOut);
+        _currentDelta = (_error - _previousError) / passedTime;
+        _previousError = _error;
+        return Mathf.Clamp(_error * _kp + _integral + _currentDelta * _kd, _minOut, _maxOut);
+    }
+
+    public float Tick(float currentPosition, float passedTime) 
+    {
+        return ComputePID(currentPosition, passedTime);
+    }
+
+    public float CalculateCorrection(float currentPosition, float targetPoint, float passedTime)
+    {
+        SetTarget(targetPoint / _accuracyDivisor);
+        return ComputePID(currentPosition / _accuracyDivisor, passedTime);
+    }
+
+    private void SetTarget(float target)
+    {
+        _targetPoint = target;
+    }
+
+    public void SetMinMax(float min, float max) 
+    {
+        _maxOut = max;
+        _minOut = min;
+    }
+
+    //комментарии к скрипту:
+    //_kp - пропорциональный коэффициент.Коэффициент отвечает за то, чтобы контролируемый объект побыстрее 
+    //пришел к задаваемому положению. Т.е. если регулируемый объект слишком медленно тянется к задаваемому 
+    //положению, то добавлять надо именно этот коэффициент. С него же надо начинать настройку всей системы.
+    //Однако данный коэффицент не позволит объект остановиться в задаваемом положении, и если использовать
+    //только данный коэффицент, а два других оставить в нулях, то регулируемый объект будет просто раскачиваться
+    //вокруг задаваемого положения.
+
+    //Чтобы остановить данную раскачку, нужно добавить _kd - дифференциальный коэффициент.
+    //Благодаря нему прекратиться раскачка и регулируемый объект выставиться практически точно в задаваемую 
+    //позицию.
+
+    //И чтобы убрать вот это "практически", нужно добавить интегральный коэффициент _ki. 
+    //Благодаря нему объект подтянет свою позицию максимально близко к задаваемой позиции. 
+
+    //Выставлять значения коэффициентов нужно в том порядке, в котором даны их описания выше.
+    //Как правило значения коэффициентов у ПИД контроллер исчесляются сотыми или тысячными долями.
+
+    //_уведичение _minOut и _maxOut также снижают раскачивание объекта и повышают точность его остановки 
+    //около задаваемого положения. Как правило, абсолютные значения данных параметров равны, только макс идет
+    //с плюсом, а мин - с минусом
+
+    //для повышения точности регулирования текущее положение регулируемого объекта и задаваемое положение
+    // можно делить на константу _accuracyDivisor, но это замедлит общую работы системы. Т.е.
+    //регулируемый объект будет медленнее подтягиваться к задаваемому положению и медленнее выравниваться.
+}
