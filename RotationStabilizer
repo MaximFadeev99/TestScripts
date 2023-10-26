@@ -1,0 +1,27 @@
+using UnityEngine;
+
+public class ForwardRotStabilizer : MonoBehaviour
+{
+    [SerializeField] private Rigidbody _rigidBody;
+    [SerializeField] private Transform _transform;
+    [SerializeField] private float _maxForce;
+
+    [SerializeField] private PIDController _pidController = new PIDController();
+    private bool _shallApply = true;
+
+
+    private void FixedUpdate()
+    {
+        if (_shallApply)
+        {
+            Vector3 appliedTorgue = _transform.forward * _maxForce * _pidController.CalculateCorrection(_transform.rotation.z, 0f, Time.fixedDeltaTime);
+            _rigidBody.AddRelativeTorque(appliedTorgue, ForceMode.Force);
+            _shallApply = false;
+        }
+        else 
+        {
+            _shallApply = true;
+        }
+        
+    }
+}
